@@ -1,5 +1,16 @@
-import axios from 'axios';
+import Axios from 'axios';
 import { Annotation, RelationGroup, PdfAnnotations } from '../context';
+
+const BASE_URL = 'http://localhost:8000';
+const axios = Axios.create({
+    baseURL: BASE_URL,
+    headers: {
+    'Access-Control-Allow-Origin': '*', // 允许所有来源访问（可根据需求修改）
+    'Content-Type': 'application/json', // 设置请求头的 Content-Type
+    'X-Auth-Request-Email': 'development_user@example.com'
+    // 其他自定义的请求头，视需求而定
+  },
+})
 
 export interface Token {
     x: number;
@@ -25,7 +36,7 @@ function docURL(sha: string): string {
 }
 
 export function pdfURL(sha: string): string {
-    return `${docURL(sha)}/pdf`;
+    return `${BASE_URL}${docURL(sha)}/pdf`;
 }
 
 export async function getTokens(sha: string): Promise<PageTokens[]> {

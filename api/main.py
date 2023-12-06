@@ -7,6 +7,7 @@ import glob
 from fastapi import FastAPI, HTTPException, Header, Response, Body
 from fastapi.responses import FileResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.metadata import PaperStatus, Allocation
 from app.annotations import Annotation, RelationGroup, PdfAnnotation
@@ -16,7 +17,7 @@ from app import pre_serve
 IN_PRODUCTION = os.getenv("IN_PRODUCTION", "dev")
 
 CONFIGURATION_FILE = os.getenv(
-    "PAWLS_CONFIGURATION_FILE", "/usr/local/src/skiff/app/api/config/configuration.json"
+    "PAWLS_CONFIGURATION_FILE", "./config/configuration.json"
 )
 
 handlers = None
@@ -41,7 +42,17 @@ logging.getLogger("s3transfer").setLevel(logging.CRITICAL)
 configuration = pre_serve.load_configuration(CONFIGURATION_FILE)
 
 app = FastAPI()
+origins = [
+    "http://localhost:3000",
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_user_from_header(user_email: Optional[str]) -> Optional[str]:
     """
@@ -55,10 +66,10 @@ def get_user_from_header(user_email: Optional[str]) -> Optional[str]:
     thrown.
     """
     if "@" not in user_email:
-        raise HTTPException(403, "Forbidden")
+        raise HTTPException(403, "Forbidden Empty Email")
 
     if not user_is_allowed(user_email):
-        raise HTTPException(403, "Forbidden")
+        raise HTTPException(403, "Forbidden User Not Allowed")
 
     return user_email
 
@@ -67,6 +78,7 @@ def user_is_allowed(user_email: str) -> bool:
     """
     Return True if the user_email is in the users file, False otherwise.
     """
+    print(configuration)
     try:
         with open(configuration.users_file) as file:
             for line in file:

@@ -28,7 +28,9 @@ def copy(source: Union[str, Path], destination: Union[str, Path]) -> None:
 
 
 @click.command(context_settings={"help_option_names": ["--help", "-h"]})
-@click.argument("directory", type=click.Path(exists=True, file_okay=True, dir_okay=True))
+@click.argument("directory", type=click.Path(
+    exists=False, file_okay=True, dir_okay=True
+))
 @click.option("--no-hash", is_flag=True)
 def add(directory: click.Path, no_hash: bool) -> None:
     """
@@ -37,10 +39,13 @@ def add(directory: click.Path, no_hash: bool) -> None:
     base_dir = Path("skiff_files/apps/pawls/papers")
     base_dir.mkdir(exist_ok=True, parents=True)
 
-    if os.path.isdir(str(directory)):
-        pdfs = glob.glob(os.path.join(str(directory), "*.pdf"))
+    filepath = os.path.join(base_dir, str(directory))
+
+    if os.path.isdir(filepath):
+        pdfs = glob.glob(os.path.join(filepath, "*.[pP][dD][fF]"))
     else:
         pdfs = [str(directory)]
+
 
     logging.info(f"Found {len(pdfs)} total PDFs to add.")
 
